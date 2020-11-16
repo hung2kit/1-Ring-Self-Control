@@ -156,8 +156,6 @@ function loosePoints () {
     }
 }
 
-
-
 function restart() {
     unlockForm();
     onTimesUp();
@@ -174,7 +172,10 @@ function restart() {
 
 function reset() {
     unlockForm();
-    onTimesUp();
+    if(start){
+      onTimesUp();
+      showLosePointsModal();
+    } 
     TIME_LIMIT = 5;
     timePassed = 0;
     start = false;
@@ -236,7 +237,7 @@ function stopTimer() {
 function onTimesUp() {
     clearInterval(timerInterval);
     onBreak = false ;
-    hideButton();
+    if(start) hideButton();
 }
 
 function hideButton() {
@@ -262,7 +263,7 @@ function startTimer() {
     if(start) {
       checkLosePoints = true;
       hideButton();
-      window.addEventListener('blur', loosePoints);
+      document.addEventListener('visibilitychange', loosePoints);
       lockForm();
       timerInterval = setInterval(() => {
         timePassed = timePassed += 1;
