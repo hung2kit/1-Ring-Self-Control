@@ -263,7 +263,7 @@ function startTimer() {
     if(start) {
       checkLosePoints = true;
       hideButton();
-      document.addEventListener('visibilitychange', loosePoints);
+      window.addEventListener('visibilitychange', loosePoints);
       lockForm();
       timerInterval = setInterval(() => {
         timePassed = timePassed += 1;
