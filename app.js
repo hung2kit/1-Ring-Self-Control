@@ -2,6 +2,7 @@ const FULL_DASH_ARRAY = 283;
 const WARNING_THRESHOLD = 20;
 const ALERT_THRESHOLD = 10;
 
+
 const COLOR_CODES = {
   info: {
     color: "green"
@@ -16,14 +17,16 @@ const COLOR_CODES = {
   }
 };
 
-
-let TIME_LIMIT = 300;
+let start =false;
+let onBreak = true;
+let checkLosePoints = true;
+let TIME_LIMIT = 5;
 let timePassed = 0;
 let timeLeft = TIME_LIMIT;
 let timerInterval = null;
 let remainingPathColor = COLOR_CODES.info.color;
 let points = 200;
-let setPoints =0;
+let setPoints =200;
 
 
 function showTimer () {
@@ -78,6 +81,31 @@ function showModal() {
   });
 }
 
+function showLosePointsModal() {
+  document.getElementById("notification").innerHTML = `<div class="modal fade" id="exampleModalLong" tabindex="-1" role="dialog" aria-labelledby="exampleModalLongTitle" aria-hidden="true">
+    <div class="modal-dialog" role="document">
+      <div class="modal-content">
+        <div class="modal-header">
+          <h5 class="modal-title" id="exampleModalLongTitle">Times up!</h5>
+          <button type="button" class="close" data-dismiss="modal" aria-label="Close">
+            <span aria-hidden="true">&times;</span>
+          </button>
+        </div>
+        <div class="modal-body">
+           Oops! You can do better next time.
+        </div>
+        <div class="modal-footer">
+          <button type="button" class="btn btn-secondary" data-dismiss="modal">Ok</button>
+        </div>
+      </div>
+    </div>
+  </div>`;
+  $(document).ready(function(){
+    // Show the Modal on load
+    $("#exampleModalLong").modal("show");
+  });
+}
+
 
 
 function earnPoints() {
@@ -119,31 +147,39 @@ function doublePoints() {
   showWallet();
 }
 
+
 function loosePoints () {
-  restart();
-  if (setPoints == 200 & points >200) {
-      points -= 200;
-  } else if(setPoints == 500 & points >200 ) {
-      points -=500;
-  } else if (setPoints ==1000 & points >200) {
-      points -= 1000;
-  } else if (setPoints ==2000) {
-      points -= 2000;
-  } else if(setPoints == 4000) {
-      points -= 4000;
-  } else if(setPoints == 7000) {
-      points -= 7000;
-  } else if(setPoints == 10000) {
-      points -=10000;
-  } 
-  showWallet();
+    while(checkLosePoints & onBreak) {
+        showLosePointsModal();
+        if(start) reset();
+        break
+    }
 }
+
+
 
 function restart() {
     unlockForm();
     onTimesUp();
-    TIME_LIMIT = 300;
+    TIME_LIMIT = 5;
     timePassed = 0;
+    start = false;
+    checkLosePoints = false;
+    onBreak = true;
+    timeLeft = TIME_LIMIT;
+    timerInterval = null;
+    remainingPathColor = COLOR_CODES.info.color;
+    showTimer();
+}
+
+function reset() {
+    unlockForm();
+    onTimesUp();
+    TIME_LIMIT = 5;
+    timePassed = 0;
+    start = false;
+    onBreak = true;
+    checkLosePoints =false;
     timeLeft = TIME_LIMIT;
     timerInterval = null;
     remainingPathColor = COLOR_CODES.info.color;
@@ -157,7 +193,7 @@ function showEarnPoints(){
         result.textContent = `Earn ${event.target.value} points`;
         setPoints = event.target.value;
         if (setPoints == 200 ) {
-             TIME_LIMIT = 5;
+            TIME_LIMIT = 5;
         } else if(setPoints == 500 ) {
             TIME_LIMIT = 10*60;
         } else if (setPoints ==1000) {
@@ -188,7 +224,6 @@ showEarnPoints();
 showWallet();
 
 function stopTimer() {
-    alert("You have loose!");
     timerInterval = setInterval(() => {
         document.getElementById("base-timer-label").innerHTML = formatTime(
           timePassed
@@ -200,6 +235,7 @@ function stopTimer() {
 
 function onTimesUp() {
     clearInterval(timerInterval);
+    onBreak = false ;
     hideButton();
 }
 
@@ -221,24 +257,30 @@ function unlockForm() {
 }
 
 function startTimer() {
-  window.addEventListener('blur', loosePoints);
-  hideButton();
-  lockForm();
-  timerInterval = setInterval(() => {
-    timePassed = timePassed += 1;
-    timeLeft = TIME_LIMIT - timePassed;
-    document.getElementById("base-timer-label").innerHTML = formatTime(
-      timeLeft
-    );
-    setCircleDasharray();
-    setRemainingPathColor(timeLeft);
-    if (timeLeft === 0) {
-      onTimesUp();
-      showModal();
+    start = true;
+    onBreak = true;
+    if(start) {
+      checkLosePoints = true;
       hideButton();
-      restart();
+      window.addEventListener('blur', loosePoints);
+      lockForm();
+      timerInterval = setInterval(() => {
+        timePassed = timePassed += 1;
+        timeLeft = TIME_LIMIT - timePassed;
+        document.getElementById("base-timer-label").innerHTML = formatTime(
+          timeLeft
+        );
+        setCircleDasharray();
+        setRemainingPathColor(timeLeft);
+        if (timeLeft === 0) {
+          onTimesUp();
+          showModal();
+          restart();
+          hideButton();
+          start = false;
+        }
+      }, 1000);
     }
-  }, 1000);
 }
 
 function formatTime(time) {
