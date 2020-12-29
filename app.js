@@ -72,7 +72,6 @@ function showModal() {
            Hooray! You have focused ${formatTime(TIME_LIMIT)} minutes. Click to earn ${setPoints} points!
         </div>
         <div class="modal-footer">
-          <button type="button" class="btn btn-warning" data-dismiss="modal" onclick="doublePoints()">Double points</button>
           <button type="button" class="btn btn-success" data-dismiss="modal" onclick="afterSession()">Earn points</button>
         </div>
       </div>
@@ -206,6 +205,7 @@ function loosePoints () {
 
 function stopSession() {
     document.querySelector(".status-line").innerHTML = "Start to focus";
+    document.getElementById("5_second").selected = true; 
     unlockForm();
     var x = document.querySelector(".reset-btn");
     var y = document.querySelector(".start-btn");
