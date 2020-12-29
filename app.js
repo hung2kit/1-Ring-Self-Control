@@ -18,8 +18,9 @@ const COLOR_CODES = {
 };
 
 let start =false;
-let onBreak = true;
+let onBreak = false;
 let checkLosePoints = true;
+let stoppedSession =false;
 let TIME_LIMIT = 5;
 let timePassed = 0;
 let timeLeft = TIME_LIMIT;
@@ -27,6 +28,11 @@ let timerInterval = null;
 let remainingPathColor = COLOR_CODES.info.color;
 let points = 200;
 let setPoints =200;
+
+
+showTimer();
+showEarnPoints();
+showWallet();
 
 
 function showTimer () {
@@ -56,21 +62,18 @@ function showTimer () {
 }
 
 function showModal() {
-    document.getElementById("notification").innerHTML = `<div class="modal fade" id="exampleModalLong" tabindex="-1" role="dialog" aria-labelledby="exampleModalLongTitle" aria-hidden="true">
+    document.getElementById("notification").innerHTML = `<div class="modal fade" id="exampleModalLong" tabindex="-1" role="dialog" aria-labelledby="exampleModalLongTitle" aria-hidden="true" data-backdrop="static">
     <div class="modal-dialog" role="document">
       <div class="modal-content">
         <div class="modal-header">
           <h5 class="modal-title" id="exampleModalLongTitle">Times up!</h5>
-          <button type="button" class="close" data-dismiss="modal" aria-label="Close">
-            <span aria-hidden="true">&times;</span>
-          </button>
         </div>
         <div class="modal-body">
-           Hooray! You have focused ${formatTime(TIME_LIMIT)} minutes today. Click to earn ${setPoints} points!
+           Hooray! You have focused ${formatTime(TIME_LIMIT)} minutes. Click to earn ${setPoints} points!
         </div>
         <div class="modal-footer">
           <button type="button" class="btn btn-warning" data-dismiss="modal" onclick="doublePoints()">Double points</button>
-          <button type="button" class="btn btn-success" data-dismiss="modal" onclick="earnPoints()">Earn points</button>
+          <button type="button" class="btn btn-success" data-dismiss="modal" onclick="afterSession()">Earn points</button>
         </div>
       </div>
     </div>
@@ -81,7 +84,30 @@ function showModal() {
   });
 }
 
-function showLosePointsModal() {
+function resetConfirm() {
+  document.getElementById("notification").innerHTML = `<div class="modal fade" id="exampleModalLong" tabindex="-1" role="dialog" aria-labelledby="exampleModalLongTitle" aria-hidden="true" data-backdrop="static">
+    <div class="modal-dialog" role="document">
+      <div class="modal-content">
+        <div class="modal-header">
+          <h5 class="modal-title" id="exampleModalLongTitle">Hang on there!</h5>
+        </div>
+        <div class="modal-body">
+           Stop this session?
+        </div>
+        <div class="modal-footer">
+          <button type="button" class="btn btn-secondary" data-dismiss="modal" onclick="onTimesUp()">Cancel</button>
+          <button type="button" class="btn btn-secondary" data-dismiss="modal" onclick="stopSession()">Stop</button>
+        </div>
+      </div>
+    </div>
+  </div>`;
+  $(document).ready(function(){
+    // Show the Modal on load
+    $("#exampleModalLong").modal("show");
+  });
+}
+
+function loosePointsModal() {
   document.getElementById("notification").innerHTML = `<div class="modal fade" id="exampleModalLong" tabindex="-1" role="dialog" aria-labelledby="exampleModalLongTitle" aria-hidden="true">
     <div class="modal-dialog" role="document">
       <div class="modal-content">
@@ -92,7 +118,7 @@ function showLosePointsModal() {
           </button>
         </div>
         <div class="modal-body">
-           Oops! You can do better next time.
+         Oops! You can do better next time.
         </div>
         <div class="modal-footer">
           <button type="button" class="btn btn-secondary" data-dismiss="modal">Ok</button>
@@ -105,8 +131,27 @@ function showLosePointsModal() {
     $("#exampleModalLong").modal("show");
   });
 }
-
-
+ 
+function afterSession() {
+  if(onBreak ==false) earnPoints();
+  document.getElementById("notification").innerHTML = `<div class="modal fade" id="exampleModalLong" tabindex="-1" role="dialog" aria-labelledby="exampleModalLongTitle" aria-hidden="true" data-backdrop="static">
+  <div class="modal-dialog" role="document">
+    <div class="modal-content">
+      <div class="modal-header">
+        <h5 class="modal-title" id="exampleModalLongTitle">Well done! What's next?</h5>
+      </div>
+      <div class="modal-body" >
+      <button type="button" class="btn btn-primary" data-dismiss="modal" onclick="stopSession()">Skip break</button>
+      <button type="button" class="btn btn-secondary" data-dismiss="modal" onclick="breakTime()">Take a break</button>
+      </div>
+    </div>
+  </div>
+</div>`;
+$(document).ready(function(){
+  // Show the Modal on load
+  $("#exampleModalLong").modal("show");
+});
+}
 
 function earnPoints() {
   if (setPoints == 200 ) {
@@ -129,87 +174,125 @@ function earnPoints() {
 
 
 function doublePoints() {
-  if (setPoints == 200 ) {
-    points += 200*2;
-} else if(setPoints == 500 ) {
-    points +=500*2;
-} else if (setPoints ==1000) {
-    points += 1000*2;
-} else if (setPoints ==2000) {
-    points += 2000*2;
-} else if(setPoints == 4000) {
-    points += 4000*2;
-} else if(setPoints == 7000) {
-    points += 7000*2;
-} else if(setPoints == 10000) {
-    points +=10000*2;
-}
-  showWallet();
+  if(onBreak) {
+    if (setPoints == 200 ) {
+      points += 200*2;
+  } else if(setPoints == 500 ) {
+      points +=500*2;
+  } else if (setPoints ==1000) {
+      points += 1000*2;
+  } else if (setPoints ==2000) {
+      points += 2000*2;
+  } else if(setPoints == 4000) {
+      points += 4000*2;
+  } else if(setPoints == 7000) {
+      points += 7000*2;
+  } else if(setPoints == 10000) {
+      points +=10000*2;
+  }
+    showWallet();
+  }
 }
 
 
 function loosePoints () {
-    while(checkLosePoints & onBreak) {
-        showLosePointsModal();
-        if(start) reset();
-        break
-    }
+  if(start ==true && onBreak == false) {
+    loosePointsNotify();
+    loosePointsModal();
+    onTimesUp();
+    stopSession();
+ }
 }
 
-function restart() {
+function stopSession() {
+    document.querySelector(".status-line").innerHTML = "Start to focus";
     unlockForm();
-    onTimesUp();
-    TIME_LIMIT = 5;
-    timePassed = 0;
-    start = false;
-    checkLosePoints = false;
-    onBreak = true;
-    timeLeft = TIME_LIMIT;
-    timerInterval = null;
-    remainingPathColor = COLOR_CODES.info.color;
-    showTimer();
+    var x = document.querySelector(".reset-btn");
+    var y = document.querySelector(".start-btn");
+    var z = document.querySelector(".break-btn");
+    x.style.display = "none";
+    y.style.display = "block";
+    z.style.display = "none";
+
+  TIME_LIMIT = 5;
+  timePassed = 0;
+  start = false;
+  onBreak =false;
+  setPoints = 0;
+  checkLosePoints =false;
+  timeLeft = TIME_LIMIT;
+  timerInterval = null;
+  remainingPathColor = COLOR_CODES.info.color;
+  
+  showTimer();
 }
 
 function reset() {
-    unlockForm();
-    if(start){
-      onTimesUp();
-      showLosePointsModal();
-    } 
-    TIME_LIMIT = 5;
-    timePassed = 0;
-    start = false;
-    onBreak = true;
-    checkLosePoints =false;
-    timeLeft = TIME_LIMIT;
-    timerInterval = null;
-    remainingPathColor = COLOR_CODES.info.color;
-    showTimer();
+  if(start){
+    clearInterval(timerInterval);
+    resetConfirm();
+  } 
+}
+
+function pauseTimer(){
+    clearInterval(timerInterval);
+    var x = document.querySelector(".reset-btn");
+    var y = document.querySelector(".start-btn");
+    var z = document.querySelector(".break-btn");
+    x.style.display = "block";
+    y.style.display = "block";
+    z.style.display = "none";
 }
 
 function showEarnPoints(){
-    var e =document.getElementById("select-timer");
-    e.addEventListener('change',(event) =>{
-        const result =document.getElementById("earn-points");
-        result.textContent = `Earn ${event.target.value} points`;
-        setPoints = event.target.value;
-        if (setPoints == 200 ) {
-            TIME_LIMIT = 5;
-        } else if(setPoints == 500 ) {
-            TIME_LIMIT = 10*60;
-        } else if (setPoints ==1000) {
-            TIME_LIMIT = 15*60;
-        } else if (setPoints ==2000) {
-            TIME_LIMIT = 25*60;
-        } else if(setPoints == 4000) {
-            TIME_LIMIT = 30*60;
-        } else if(setPoints == 7000) {
-            TIME_LIMIT = 45*60;
-        } else if(setPoints == 10000) {
-            TIME_LIMIT = 60*60;
-        }
-        showTimer();
-    } );
+      if(onBreak) {
+        var e =document.getElementById("select-timer");
+        e.addEventListener('change',(event) =>{
+            setPoints = event.target.value;
+            if (setPoints == 200 ) {
+                TIME_LIMIT = 5;
+            } else if(setPoints == 500 ) {
+                TIME_LIMIT = 10*60;
+            } else if (setPoints ==1000) {
+                TIME_LIMIT = 15*60;
+            } else if (setPoints ==2000) {
+                TIME_LIMIT = 25*60;
+            } else if(setPoints == 4000) {
+                TIME_LIMIT = 30*60;
+            } else if(setPoints == 7000) {
+                TIME_LIMIT = 45*60;
+            } else if(setPoints == 10000) {
+                TIME_LIMIT = 60*60;
+            }
+            showTimer();
+        } );
+      } else {
+        var e =document.getElementById("select-timer");
+        e.addEventListener('change',(event) =>{
+          const result =document.getElementById("earn-points");
+            if(onBreak==false) {
+              result.textContent = `Earn ${event.target.value} points`;
+            }
+            setPoints = event.target.value;
+            if (setPoints == 200 ) {
+                TIME_LIMIT = 5;
+            } else if(setPoints == 500 ) {
+                TIME_LIMIT = 10*60;
+            } else if (setPoints ==1000) {
+                TIME_LIMIT = 15*60;
+            } else if (setPoints ==2000) {
+                TIME_LIMIT = 25*60;
+            } else if(setPoints == 4000) {
+                TIME_LIMIT = 30*60;
+            } else if(setPoints == 7000) {
+                TIME_LIMIT = 45*60;
+            } else if(setPoints == 10000) {
+                TIME_LIMIT = 60*60;
+            }
+            showTimer();
+        } );
+        
+      }
 }
 
 
@@ -219,10 +302,6 @@ function showWallet() {
 </svg> ${points}`;
 }
 
-
-showTimer();
-showEarnPoints();
-showWallet();
 
 function stopTimer() {
     timerInterval = setInterval(() => {
@@ -236,18 +315,7 @@ function stopTimer() {
 
 function onTimesUp() {
     clearInterval(timerInterval);
-    onBreak = false ;
-    if(start) hideButton();
 }
-
-function hideButton() {
-    var x = document.querySelector(".start-btn");
-    if (x.style.display === "none") {
-      x.style.display = "block";
-    } else {
-      x.style.display = "none";
-    }
-  } 
 
 function lockForm() {
     document.getElementById("select-timer").disabled=true;
@@ -257,32 +325,15 @@ function unlockForm() {
     document.getElementById("select-timer").disabled=false;
 }
 
-function startTimer() {
-    start = true;
-    onBreak = true;
-    if(start) {
-      checkLosePoints = true;
-      hideButton();
-      window.addEventListener('visibilitychange', loosePoints);
-      lockForm();
-      timerInterval = setInterval(() => {
-        timePassed = timePassed += 1;
-        timeLeft = TIME_LIMIT - timePassed;
-        document.getElementById("base-timer-label").innerHTML = formatTime(
-          timeLeft
-        );
-        setCircleDasharray();
-        setRemainingPathColor(timeLeft);
-        if (timeLeft === 0) {
-          onTimesUp();
-          showModal();
-          restart();
-          hideButton();
-          start = false;
-        }
-      }, 1000);
-    }
+function buttonToggle() {
+    var start_btn = document.querySelector(".start-btn");
+    var break_btn = document.querySelector(".break-btn");
+    var reset_btn = document.querySelector(".reset-btn");
+    start_btn.style.display = "none";
+    break_btn.style.display = "block";
+    reset_btn.style.display = "none";
 }
+
 
 function formatTime(time) {
   const minutes = Math.floor(time / 60);
